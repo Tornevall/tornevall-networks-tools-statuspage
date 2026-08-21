@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.vite/
+.env
+.env.*
+!/.env.example
+public/status-config.json
+.DS_Store
