@@ -2,7 +2,7 @@
 
 Standalone public status-page frontend for the ToolsAPI Status Platform.
 
-The application is intentionally backend-agnostic at runtime. It consumes the public ToolsAPI status contract and can be installed on any static hosting platform that can serve HTML, JavaScript, CSS, and a small runtime configuration file.
+This is a separate React application. It does not use Laravel, Blade, the ToolsAPI frontend bundle, or a shared runtime with ToolsAPI. Its only runtime dependency is the public read-only ToolsAPI status endpoint.
 
 ## Requirements
 
@@ -26,29 +26,29 @@ npm run typecheck
 npm run build
 ```
 
-The production bundle is written to `dist/`.
+The production bundle is written to `dist/`. Asset paths are relative by default, so the same build can be served from a subdirectory such as `/status/` or from a dedicated hostname root such as `status.example.test`.
 
 ## Runtime configuration
 
-The app loads `status-config.json` from the same base path as the application. Copy `public/status-config.example.json` to `public/status-config.json` before building, or provide an equivalent file next to the built assets.
-
-Example:
+The app loads `status-config.json` from the same location as the built application. The repository ships with a default ToolsAPI deployment configuration:
 
 ```json
 {
-  "apiBaseUrl": "https://api.example.test",
-  "pageSlug": "example-company",
+  "apiBaseUrl": "https://tools.tornevall.net",
+  "pageSlug": "tools",
   "refreshIntervalSeconds": 30,
-  "titleOverride": null
+  "titleOverride": "Tornevall Networks Tools"
 }
 ```
 
+Replace that file at deployment time for another compatible status page. `public/status-config.example.json` contains a neutral example.
+
 `apiBaseUrl` may be empty when the public API is served from the same origin.
 
-The client requests:
+The client requests the unversioned endpoint:
 
 ```text
-GET {apiBaseUrl}/api/status/v1/pages/{pageSlug}
+GET {apiBaseUrl}/api/statuspage/{pageSlug}
 ```
 
 If the runtime configuration file is unavailable, the app falls back to build-time variables when present:
@@ -63,26 +63,36 @@ No private API token belongs in either configuration path. The frontend uses pub
 
 ## Public API contract
 
-The frontend expects schema version `1.x` and safely normalizes unknown component/incident status values instead of crashing. The main payload contains:
+The client accepts the ToolsAPI public Statuspage payload with these public fields:
 
-- page identity and optional branding metadata;
-- overall status;
-- components/services and optional uptime values;
-- active incidents and incident timeline updates;
-- recent incident history;
-- generation timestamp.
+- `slug`, `name`, `description`, `status`, and `published_at` for page identity/state;
+- `components[]` with component identity, description, status, and ordering;
+- `incidents[]` with title, status, impact, public summary, timestamps, and published updates;
+- `events[]` when supplied by the backend.
+
+The normalizer also tolerates optional richer presentation metadata such as status labels, branding, homepage links, and uptime summaries. Missing optional fields degrade to neutral display values instead of breaking rendering. Unknown future status values render as `Unknown`.
 
 Remote text is rendered as text, not raw HTML.
 
-## Hosting under a subdirectory
+## ToolsAPI checkout placement
 
-Set Vite's `base` using `VITE_BASE_PATH` when building:
+The ToolsAPI repository can mount this repository as a Git submodule at:
+
+```text
+public/status
+```
+
+That path is only a checkout/deployment location. The React application remains independent from Laravel. A future `status.tornevall.net` virtual host can serve the built `dist/` directory directly without routing requests through ToolsAPI's web application.
+
+## Custom base path
+
+Relative assets are the default. A fixed Vite base can still be supplied when a deployment requires it:
 
 ```bash
 VITE_BASE_PATH=/status/ npm run build
 ```
 
-The runtime `status-config.json` is loaded relative to that base path.
+The runtime `status-config.json` is loaded relative to the configured base.
 
 ## Repository workflow
 
