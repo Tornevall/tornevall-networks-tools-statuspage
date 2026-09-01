@@ -13,6 +13,7 @@ The application must be independently installable and hostable anywhere static w
 - Data source: a configurable ToolsAPI-compatible public status API endpoint.
 - The frontend is a read-only public client. Status management, monitoring, incidents, tenant ownership, authorization, subscriptions, audit logging, and AI generation belong to the backend platform.
 - Runtime configuration must support different status API base URLs and page identifiers without rebuilding application source code where practical.
+- The ToolsAPI repository may mount this repository as the `public/status` submodule. That placement must not introduce a runtime dependency on Laravel.
 
 ## Security and rendering
 
@@ -32,8 +33,9 @@ The application must be independently installable and hostable anywhere static w
 
 ## API compatibility
 
-- Keep public API types centralized and version-aware.
-- Backwards-incompatible API assumptions require an explicit contract/version change and documentation update.
+- Keep public API types and normalization centralized.
+- ToolsAPI API and route URLs are unversioned. Never introduce `/v1`, `/v2`, or similar version namespaces in status API URLs.
+- Backwards-incompatible API assumptions require an explicit contract and documentation update without URL versioning.
 - Unknown status values from newer backends must degrade safely instead of crashing the app.
 
 ## Testing and CI
@@ -52,5 +54,5 @@ The application must be independently installable and hostable anywhere static w
 
 - Before making changes, inspect existing implementation, issues, pull requests, and every applicable `AGENTS.md`.
 - Reuse existing issues, branches, and pull requests when appropriate; do not create duplicates.
-- Development work should use an issue, feature branch, tests, and pull request.
+- Development work should use an issue, branch, tests, and pull request.
 - Preserve backwards compatibility unless a breaking change is explicitly intended and documented.
