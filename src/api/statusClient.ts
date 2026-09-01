@@ -128,36 +128,44 @@ function parseIncidentUpdate(value: unknown): IncidentUpdate {
     status,
     statusLabel: asString(raw.status_label, humanize(status)),
     message: asString(raw.message),
-    createdAt: asString(raw.created_at),
+    createdAt: asString(raw.created_at ?? raw.published_at),
   };
 }
 
 function parseIncident(value: unknown): StatusIncident {
   const raw = asRecord(value);
   const status = normalizeEnum(raw.status, INCIDENT_STATUSES, 'unknown');
+  const updates = asArray(raw.updates).map(parseIncidentUpdate);
+  const latestUpdate = updates.at(-1)?.createdAt ?? '';
+  const startedAt = asString(raw.started_at ?? raw.opened_at);
+  const resolvedAt = nullableString(raw.resolved_at);
 
   return {
     id: String(raw.id ?? raw.slug ?? ''),
     slug: asString(raw.slug, String(raw.id ?? '')),
     title: asString(raw.title, 'Incident'),
-    severity: normalizeEnum(raw.severity, INCIDENT_SEVERITIES, 'unknown'),
+    severity: normalizeEnum(raw.severity ?? raw.impact, INCIDENT_SEVERITIES, 'unknown'),
     status,
     statusLabel: asString(raw.status_label, humanize(status)),
-    publicSummary: nullableString(raw.public_summary),
-    startedAt: asString(raw.started_at),
-    updatedAt: asString(raw.updated_at),
-    resolvedAt: nullableString(raw.resolved_at),
+    publicSummary: nullableString(raw.public_summary ?? raw.summary),
+    startedAt,
+    updatedAt: asString(raw.updated_at, latestUpdate || resolvedAt || startedAt),
+    resolvedAt,
     affectedComponents: asArray(raw.affected_components).map(parseIncidentComponent),
-    updates: asArray(raw.updates).map(parseIncidentUpdate),
+    updates,
   };
 }
 
 export function normalizeStatusPayload(value: unknown): StatusPayload {
   const raw = asRecord(value);
-  const page = asRecord(raw.page);
+  const embeddedPage = asRecord(raw.page);
+  const page = Object.keys(embeddedPage).length > 0 ? embeddedPage : raw;
   const branding = asRecord(page.branding);
-  const overall = asRecord(raw.overall);
-  const overallStatus = normalizeEnum(overall.status, COMPONENT_STATUSES, 'unknown');
+  const embeddedOverall = asRecord(raw.overall);
+  const overallStatusSource = Object.keys(embeddedOverall).length > 0
+    ? embeddedOverall.status
+    : raw.status;
+  const overallStatus = normalizeEnum(overallStatusSource, COMPONENT_STATUSES, 'unknown');
   const slug = asString(page.slug).trim();
   const name = asString(page.name).trim();
 
@@ -165,8 +173,17 @@ export function normalizeStatusPayload(value: unknown): StatusPayload {
     throw new StatusApiError('The status API response is missing page identity.', 'INVALID_PAYLOAD');
   }
 
+  const incidents = asArray(raw.incidents).map(parseIncident);
+  const explicitActive = asArray(raw.active_incidents);
+  const explicitHistory = asArray(raw.incident_history);
+  const activeIncidents = explicitActive.length > 0
+    ? explicitActive.map(parseIncident)
+    : incidents.filter((incident) => incident.status !== 'resolved' && incident.resolvedAt === null);
+  const incidentHistory = explicitHistory.length > 0
+    ? explicitHistory.map(parseIncident)
+    : incidents.filter((incident) => incident.status === 'resolved' || incident.resolvedAt !== null);
+
   return {
-    schemaVersion: asString(raw.schema_version, '1.0'),
     page: {
       slug,
       name,
@@ -179,13 +196,13 @@ export function normalizeStatusPayload(value: unknown): StatusPayload {
     },
     overall: {
       status: overallStatus,
-      label: asString(overall.label, humanize(overallStatus)),
-      message: nullableString(overall.message),
+      label: asString(embeddedOverall.label, humanize(overallStatus)),
+      message: nullableString(embeddedOverall.message),
     },
     components: asArray(raw.components).map(parseComponent),
-    activeIncidents: asArray(raw.active_incidents).map(parseIncident),
-    incidentHistory: asArray(raw.incident_history).map(parseIncident),
-    generatedAt: asString(raw.generated_at),
+    activeIncidents,
+    incidentHistory,
+    generatedAt: asString(raw.generated_at ?? raw.observed_at),
   };
 }
 
@@ -195,7 +212,7 @@ export function buildStatusApiUrl(config: RuntimeConfig): string {
     throw new StatusApiError('No status page slug has been configured.', 'CONFIGURATION');
   }
 
-  return `${config.apiBaseUrl}/api/status/v1/pages/${encodeURIComponent(slug)}`;
+  return `${config.apiBaseUrl}/api/statuspage/${encodeURIComponent(slug)}`;
 }
 
 export async function fetchStatusPage(
@@ -220,7 +237,12 @@ export async function fetchStatusPage(
       );
     }
 
-    return normalizeStatusPayload(await response.json());
+    const payload = normalizeStatusPayload(await response.json());
+    if (payload.generatedAt === '') {
+      payload.generatedAt = response.headers.get('Date') ?? new Date().toISOString();
+    }
+
+    return payload;
   } catch (error) {
     if (error instanceof StatusApiError) {
       throw error;
