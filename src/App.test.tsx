@@ -57,7 +57,7 @@ describe('App', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: 'Example Company' })).toBeInTheDocument();
-    expect(screen.getByText('Degraded')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Degraded', level: 2 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Public API' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Elevated API latency' })).toBeInTheDocument();
     expect(screen.getByText('Some API requests are slower than normal.')).toBeInTheDocument();
