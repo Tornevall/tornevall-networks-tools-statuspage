@@ -1,6 +1,0 @@
-{
-  "apiBaseUrl": "https://tools.tornevall.net",
-  "pageSlug": "tools",
-  "refreshIntervalSeconds": 30,
-  "titleOverride": "Tornevall Networks Tools"
-}

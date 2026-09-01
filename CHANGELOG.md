@@ -9,5 +9,7 @@
 - Add overall status, component/service, incident and history presentation.
 - Add automatic refresh, stale-data presentation and API-unavailable handling.
 - Make production asset paths portable between `/status/` and a dedicated status hostname.
-- Add tests and GitHub Actions validation.
+- Add SPA fallback routing so direct navigation and reloads resolve through the generated `dist/index.html` entry point.
+- Treat `dist/` as generated deployment output instead of committing CI-generated bundles back to pull-request branches.
+- Add tests and GitHub Actions validation for test, typecheck and production build output.
 - Repair the initial CI typecheck configuration by separating Vite and Vitest configuration.

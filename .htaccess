@@ -5,10 +5,12 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # This repository can be mounted directly below a public web root (for
-    # example /status/). Always serve the committed Vite production bundle,
-    # never the TypeScript/Vite source tree.
-    RewriteRule ^$ dist/index.html [L]
+    # Serve the generated Vite bundle from dist/ whether this repository is
+    # mounted below /status/ or used as the document root of a dedicated host.
     RewriteRule ^dist(?:/|$) - [L]
-    RewriteRule ^(.+)$ dist/$1 [L]
+    RewriteRule ^$ dist/index.html [L]
+    RewriteRule ^(.+\.[^/]+)$ dist/$1 [L]
+
+    # Client-side routes must always fall back to the SPA entry point.
+    RewriteRule ^.*$ dist/index.html [L]
 </IfModule>
