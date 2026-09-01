@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -32,6 +34,24 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+
+      - name: Commit production bundle for same-repository pull requests
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          git add -f dist
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -m "Update Statuspage production bundle"
+          git push origin "HEAD:${HEAD_REF}"
+
+      - name: Verify committed production bundle
+        if: github.event_name == 'push'
+        run: git diff --exit-code -- dist
 
       - name: Upload production bundle
         uses: actions/upload-artifact@v4
