@@ -79,7 +79,6 @@ export interface OverallStatus {
 }
 
 export interface StatusPayload {
-  schemaVersion: string;
   page: StatusPageIdentity;
   overall: OverallStatus;
   components: StatusComponent[];
