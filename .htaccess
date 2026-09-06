@@ -1,0 +1,16 @@
+<IfModule mod_dir.c>
+    DirectoryIndex disabled
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve the generated Vite bundle from dist/ whether this repository is
+    # mounted below /status/ or used as the document root of a dedicated host.
+    RewriteRule ^dist(?:/|$) - [L]
+    RewriteRule ^$ dist/index.html [L]
+    RewriteRule ^(.+\.[^/]+)$ dist/$1 [L]
+
+    # Client-side routes must always fall back to the SPA entry point.
+    RewriteRule ^.*$ dist/index.html [L]
+</IfModule>
