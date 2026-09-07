@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 - 2026-09-07
+
+- Add a CI-managed `production` branch containing only the verified static bundle built from `main` with the canonical `/status/` asset base.
+- Publish only after tests, type checking, production build and bundle-contract checks pass.
+- Record the source repository revision and component version in safe `SOURCE.json` metadata so downstream ToolsAPI deployments can pin the exact reviewed bundle.
+- Keep production-branch history linear and keep generated `dist/` out of source branches.
+
 ## 0.1.1 - 2026-09-07
 
 - Add an optional `pathSlugPrefix` runtime setting so one deployed bundle can serve canonical tenant URLs such as `/status/{slug}` while retaining the configured default page at `/status/`.
