@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "https://api.example.test",
+  "pageSlug": "example-company",
+  "pathSlugPrefix": null,
+  "refreshIntervalSeconds": 30,
+  "titleOverride": null
+}
