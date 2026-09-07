@@ -36,6 +36,7 @@ The app loads `status-config.json` from the same location as the built applicati
 {
   "apiBaseUrl": "https://tools.tornevall.net",
   "pageSlug": "tools",
+  "pathSlugPrefix": "/status",
   "refreshIntervalSeconds": 30,
   "titleOverride": "Tornevall Networks Tools"
 }
@@ -44,6 +45,8 @@ The app loads `status-config.json` from the same location as the built applicati
 Replace that file at deployment time for another compatible status page. `public/status-config.example.json` contains a neutral example.
 
 `apiBaseUrl` may be empty when the public API is served from the same origin.
+
+`pageSlug` is the default page to load. When `pathSlugPrefix` is set, a valid single slug immediately below that path overrides the default for the current request. For example, with `"pathSlugPrefix": "/status"`, `/status/example-company` loads `example-company` while `/status/` keeps the configured default page. Only lowercase alphanumeric slugs with internal hyphens are accepted; nested or malformed path content is ignored and the configured default remains in use.
 
 The client requests the unversioned endpoint:
 
@@ -76,13 +79,9 @@ Remote text is rendered as text, not raw HTML.
 
 ## ToolsAPI checkout placement
 
-The ToolsAPI repository can mount this repository as a Git submodule at:
+ToolsAPI may keep this repository as a source checkout outside its public web root and publish the generated `dist/` output at `/status/`. The source checkout itself must not be treated as the production static document root because it contains Vite/TypeScript source rather than the deployable bundle.
 
-```text
-public/status
-```
-
-That path is only a checkout/deployment location. The React application remains independent from Laravel. A future `status.tornevall.net` virtual host can serve the built `dist/` directory directly without routing requests through ToolsAPI's web application.
+That deployment model keeps this application independent from Laravel while allowing ToolsAPI to expose `/status` and `/status/{slug}` from the same public client.
 
 ## Custom base path
 
@@ -92,7 +91,7 @@ Relative assets are the default. A fixed Vite base can still be supplied when a 
 VITE_BASE_PATH=/status/ npm run build
 ```
 
-The runtime `status-config.json` is loaded relative to the configured base.
+The runtime `status-config.json` is loaded relative to the configured base. ToolsAPI deployments should use `/status/` as the build base so direct `/status/{slug}` requests load assets and runtime configuration from the shared `/status/` bundle root.
 
 ## Repository workflow
 
