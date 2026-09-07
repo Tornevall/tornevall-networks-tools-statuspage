@@ -77,21 +77,23 @@ The normalizer also tolerates optional richer presentation metadata such as stat
 
 Remote text is rendered as text, not raw HTML.
 
-## ToolsAPI checkout placement
+## Production bundle branch
 
-ToolsAPI may keep this repository as a source checkout outside its public web root and publish the generated `dist/` output at `/status/`. The source checkout itself must not be treated as the production static document root because it contains Vite/TypeScript source rather than the deployable bundle.
+Source development stays on `main`; generated `dist/` files are not committed back to source branches. After a successful push to `main`, Statuspage CI runs tests, type checking and a `/status/` production build, validates the resulting bundle and publishes only that static output to the linear `production` branch.
 
-That deployment model keeps this application independent from Laravel while allowing ToolsAPI to expose `/status` and `/status/{slug}` from the same public client.
+The `production` branch also contains `SOURCE.json` with the source repository, exact source revision and component version. It contains no TypeScript/Vite source, `node_modules`, credentials or private backend configuration.
+
+ToolsAPI pins a reviewed `production` commit at its public `/status` mount. This means the Tools production host only needs the verified static files and does not need Node/npm or a frontend build step during deployment.
 
 ## Custom base path
 
-Relative assets are the default. A fixed Vite base can still be supplied when a deployment requires it:
+Relative assets are the default for ordinary builds. A fixed Vite base can be supplied when a deployment requires it:
 
 ```bash
 VITE_BASE_PATH=/status/ npm run build
 ```
 
-The runtime `status-config.json` is loaded relative to the configured base. ToolsAPI deployments should use `/status/` as the build base so direct `/status/{slug}` requests load assets and runtime configuration from the shared `/status/` bundle root.
+The runtime `status-config.json` is loaded relative to the configured base. The CI-managed `production` branch is built specifically with `/status/` so direct `/status/{slug}` requests load assets and runtime configuration from the shared `/status/` bundle root.
 
 ## Repository workflow
 
