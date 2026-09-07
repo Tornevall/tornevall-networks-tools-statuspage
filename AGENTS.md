@@ -13,7 +13,9 @@ The application must be independently installable and hostable anywhere static w
 - Data source: a configurable ToolsAPI-compatible public status API endpoint.
 - The frontend is a read-only public client. Status management, monitoring, incidents, tenant ownership, authorization, subscriptions, audit logging, and AI generation belong to the backend platform.
 - Runtime configuration must support different status API base URLs and page identifiers without rebuilding application source code where practical.
-- ToolsAPI may keep this repository as a source checkout outside its public web root and publish the generated `dist/` bundle at `/status/`. Never treat the Vite/TypeScript source checkout itself as the production document root.
+- `main` is source-only. Never mount the Vite/TypeScript `main` checkout as a production document root.
+- The CI-managed `production` branch contains only the verified static bundle built from `main` with `VITE_BASE_PATH=/status/`, plus safe source revision/version metadata. ToolsAPI may pin that production commit directly at its public `/status` mount without requiring Node/npm on the Tools host.
+- Production-branch history must remain linear so downstream pinned deployment commits stay reachable. Do not force-replace deployment history.
 
 ## Security and rendering
 
@@ -22,6 +24,7 @@ The application must be independently installable and hostable anywhere static w
 - Do not introduce `dangerouslySetInnerHTML` for remote status, incident, service, or branding content.
 - External links must be validated and rendered safely.
 - Never store backend API secrets, private tokens, credentials, or administrative endpoints in this public application.
+- The `production` branch must never contain TypeScript/Vite source, `node_modules`, credentials or private configuration. `SOURCE.json` may contain only the public repository identity, source revision and component version.
 
 ## Product requirements
 
@@ -43,7 +46,8 @@ The application must be independently installable and hostable anywhere static w
 
 - All material changes require relevant automated tests.
 - Component behavior, API parsing/error handling, status rendering, configuration behavior and pathname slug selection should have regression tests where practical.
-- GitHub Actions must run install, tests, type checking, and production build for pull requests.
+- Pull requests must run install, tests, type checking, production build and static bundle-contract validation.
+- A successful push to `main` may publish the already-verified bundle to `production` only after the test job passes. Publishing failures are release/deployment failures and must not be hidden.
 
 ## Documentation and releases
 
