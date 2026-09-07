@@ -30,8 +30,16 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Build production bundle
-        run: npm run build
+      - name: Build Tools production bundle
+        run: VITE_BASE_PATH=/status/ npm run build
+
+      - name: Verify production bundle contract
+        run: |
+          test -r dist/index.html
+          test -r dist/status-config.json
+          grep -Fq '/status/assets/' dist/index.html
+          ! grep -Fq '/src/main.tsx' dist/index.html
+          grep -Fq '"pathSlugPrefix": "/status"' dist/status-config.json
 
       - name: Upload production bundle
         uses: actions/upload-artifact@v4
@@ -39,3 +47,57 @@ jobs:
           name: statuspage-dist
           path: dist
           if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout source metadata
+        uses: actions/checkout@v4
+
+      - name: Download verified production bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: statuspage-dist
+          path: /tmp/statuspage-dist
+
+      - name: Publish linear production branch
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          VERSION="$(node -p "require('./package.json').version")"
+          test -r /tmp/statuspage-dist/index.html
+          test -r /tmp/statuspage-dist/status-config.json
+          grep -Fq '/status/assets/' /tmp/statuspage-dist/index.html
+          ! grep -Fq '/src/main.tsx' /tmp/statuspage-dist/index.html
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin production:refs/remotes/origin/production || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/production; then
+            git switch -C production-publish origin/production
+            git rm -rf .
+          else
+            git switch --orphan production-publish
+            git rm -rf . || true
+          fi
+
+          cp -a /tmp/statuspage-dist/. .
+          cat > SOURCE.json <<EOF_SOURCE
+          {
+            "source_repository": "Tornevall/tornevall-networks-tools-statuspage",
+            "source_revision": "${SOURCE_SHA}",
+            "version": "${VERSION}"
+          }
+          EOF_SOURCE
+          touch .nojekyll
+
+          git add -A
+          git commit -m "Publish Statuspage ${VERSION} from ${SOURCE_SHA}"
+          git push origin HEAD:production
