@@ -8,13 +8,29 @@ export interface RuntimeConfig {
 const DEFAULT_REFRESH_SECONDS = 30;
 const MIN_REFRESH_SECONDS = 10;
 const MAX_REFRESH_SECONDS = 3600;
+const STATUS_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function normalizeBaseUrl(value: unknown): string {
   return typeof value === 'string' ? value.trim().replace(/\/+$/, '') : '';
 }
 
 function normalizeSlug(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  return STATUS_SLUG_PATTERN.test(normalized) ? normalized : '';
+}
+
+function normalizePathPrefix(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed === '') {
+    return null;
+  }
+
+  const normalized = `/${trimmed.replace(/^\/+|\/+$/g, '')}`;
+  return normalized === '/' ? null : normalized;
 }
 
 function normalizeTitle(value: unknown): string | null {
@@ -34,6 +50,29 @@ function normalizeRefreshInterval(value: unknown): number {
   }
 
   return Math.min(MAX_REFRESH_SECONDS, Math.max(MIN_REFRESH_SECONDS, Math.round(parsed)));
+}
+
+export function resolvePathSlug(pathname: string, pathPrefix: unknown): string {
+  const prefix = normalizePathPrefix(pathPrefix);
+  if (prefix === null) {
+    return '';
+  }
+
+  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  if (!normalizedPath.startsWith(`${prefix}/`)) {
+    return '';
+  }
+
+  const remainder = normalizedPath.slice(prefix.length + 1).replace(/\/+$/, '');
+  if (remainder === '' || remainder.includes('/')) {
+    return '';
+  }
+
+  try {
+    return normalizeSlug(decodeURIComponent(remainder));
+  } catch {
+    return '';
+  }
 }
 
 function buildEnvFallback(): RuntimeConfig {
@@ -56,10 +95,15 @@ export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
     }
 
     const raw = (await response.json()) as Record<string, unknown>;
+    const configuredSlug = normalizeSlug(raw.pageSlug) || fallback.pageSlug;
+    const pathSlug = resolvePathSlug(
+      typeof window === 'undefined' ? '' : window.location.pathname,
+      raw.pathSlugPrefix,
+    );
 
     return {
       apiBaseUrl: normalizeBaseUrl(raw.apiBaseUrl) || fallback.apiBaseUrl,
-      pageSlug: normalizeSlug(raw.pageSlug) || fallback.pageSlug,
+      pageSlug: pathSlug || configuredSlug,
       refreshIntervalSeconds: normalizeRefreshInterval(
         raw.refreshIntervalSeconds ?? fallback.refreshIntervalSeconds,
       ),

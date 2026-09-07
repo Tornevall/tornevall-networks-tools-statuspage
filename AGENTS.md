@@ -13,7 +13,7 @@ The application must be independently installable and hostable anywhere static w
 - Data source: a configurable ToolsAPI-compatible public status API endpoint.
 - The frontend is a read-only public client. Status management, monitoring, incidents, tenant ownership, authorization, subscriptions, audit logging, and AI generation belong to the backend platform.
 - Runtime configuration must support different status API base URLs and page identifiers without rebuilding application source code where practical.
-- The ToolsAPI repository may mount this repository as the `public/status` submodule. That placement must not introduce a runtime dependency on Laravel.
+- ToolsAPI may keep this repository as a source checkout outside its public web root and publish the generated `dist/` bundle at `/status/`. Never treat the Vite/TypeScript source checkout itself as the production document root.
 
 ## Security and rendering
 
@@ -30,6 +30,7 @@ The application must be independently installable and hostable anywhere static w
 - Branding and page identity must be configurable so the same build can serve different installations.
 - Keep the UI responsive and accessible. Status must never be communicated by color alone.
 - The public client must remain generic. Do not special-case ToolsAPI or Tornevall services in reusable components.
+- A deployment may configure `pathSlugPrefix` so one bundle serves tenant routes such as `/status/{slug}`. Only a validated single slug below that configured prefix may override the configured default `pageSlug`; malformed or nested path content must fail closed to the default.
 
 ## API compatibility
 
@@ -41,13 +42,14 @@ The application must be independently installable and hostable anywhere static w
 ## Testing and CI
 
 - All material changes require relevant automated tests.
-- Component behavior, API parsing/error handling, status rendering, and configuration behavior should have regression tests where practical.
+- Component behavior, API parsing/error handling, status rendering, configuration behavior and pathname slug selection should have regression tests where practical.
 - GitHub Actions must run install, tests, type checking, and production build for pull requests.
 
 ## Documentation and releases
 
 - Keep `README.md` current with installation, configuration, build, hosting, and API-contract requirements.
 - Keep `CHANGELOG.md` current for user-visible and integration-visible changes.
+- Keep the component version in `package.json` aligned with released client changes.
 - Never document secrets or real credentials.
 
 ## Repository workflow

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 - 2026-09-07
+
+- Add an optional `pathSlugPrefix` runtime setting so one deployed bundle can serve canonical tenant URLs such as `/status/{slug}` while retaining the configured default page at `/status/`.
+- Validate pathname-derived slugs before they can be used in the public API request; nested, malformed or unsupported path content falls back to the configured default page.
+- Clarify that ToolsAPI should publish the generated `dist/` bundle from a source checkout outside the public web root rather than serving the Vite/TypeScript source checkout directly.
+- Keep the first-party public API contract unversioned at `GET /api/statuspage/{slug}`.
+
 ## 0.1.0 - 2026-08-21
 
 - Bootstrap the standalone React/Vite/TypeScript status-page application.
