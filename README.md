@@ -26,7 +26,7 @@ npm run typecheck
 npm run build
 ```
 
-The production bundle is written to `dist/`. Asset paths are relative by default, so the same build can be served from a subdirectory such as `/status/` or from a dedicated hostname root such as `status.example.test`.
+The production bundle is written to `dist/`. Asset paths are relative by default, so the same build can be served from a subdirectory or from a dedicated hostname root.
 
 ## Runtime configuration
 
@@ -79,21 +79,36 @@ Remote text is rendered as text, not raw HTML.
 
 ## Production bundle branch
 
-Source development stays on `main`; generated `dist/` files are not committed back to source branches. After a successful push to `main`, Statuspage CI runs tests, type checking and a `/status/` production build, validates the resulting bundle and publishes only that static output to the linear `production` branch.
+Source development stays on `main`; generated `dist/` files are not committed back to source branches. After a successful push to `main`, Statuspage CI runs tests, type checking and a Tools production build, validates the resulting bundle and publishes only that static output to the linear `production` branch.
 
 The `production` branch also contains `SOURCE.json` with the source repository, exact source revision and component version. It contains no TypeScript/Vite source, `node_modules`, credentials or private backend configuration.
 
-ToolsAPI pins a reviewed `production` commit at its public `/status` mount. This means the Tools production host only needs the verified static files and does not need Node/npm or a frontend build step during deployment.
-
-## Custom base path
-
-Relative assets are the default for ordinary builds. A fixed Vite base can be supplied when a deployment requires it:
+For ToolsAPI, the canonical public application route is `/status`, but the physical static bundle is deliberately mounted elsewhere. The CI-managed Tools production bundle is built with:
 
 ```bash
-VITE_BASE_PATH=/status/ npm run build
+VITE_BASE_PATH=/status-client/ npm run build
 ```
 
-The runtime `status-config.json` is loaded relative to the configured base. The CI-managed `production` branch is built specifically with `/status/` so direct `/status/{slug}` requests load assets and runtime configuration from the shared `/status/` bundle root.
+ToolsAPI mounts that verified `production` commit at `public/status-client` and lets Laravel serve the React shell on `/status` and `/status/{slug}`. This separation prevents a physical web-root directory named `status` from intercepting the canonical Laravel route on nginx or similar front-controller setups.
+
+Do not add `public/status/index.php`, `.htaccess` workarounds, or mount the production bundle at a physical `public/status` path in ToolsAPI.
+
+## Asset base versus application route
+
+The Vite asset base and the public application route are intentionally separate concerns:
+
+- static files and runtime config: `/status-client/...`
+- public application route: `/status`
+- tenant application routes: `/status/{slug}`
+- pathname tenant selection: `"pathSlugPrefix": "/status"`
+
+The runtime `status-config.json` is loaded relative to the configured Vite base, while pathname tenant selection still uses the canonical public route prefix.
+
+For other deployments, a different fixed Vite base can still be supplied:
+
+```bash
+VITE_BASE_PATH=/my-static-status-client/ npm run build
+```
 
 ## Repository workflow
 

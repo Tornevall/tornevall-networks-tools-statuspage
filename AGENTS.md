@@ -14,7 +14,8 @@ The application must be independently installable and hostable anywhere static w
 - The frontend is a read-only public client. Status management, monitoring, incidents, tenant ownership, authorization, subscriptions, audit logging, and AI generation belong to the backend platform.
 - Runtime configuration must support different status API base URLs and page identifiers without rebuilding application source code where practical.
 - `main` is source-only. Never mount the Vite/TypeScript `main` checkout as a production document root.
-- The CI-managed `production` branch contains only the verified static bundle built from `main` with `VITE_BASE_PATH=/status/`, plus safe source revision/version metadata. ToolsAPI may pin that production commit directly at its public `/status` mount without requiring Node/npm on the Tools host.
+- The CI-managed `production` branch contains only the verified static bundle built from `main` with `VITE_BASE_PATH=/status-client/`, plus safe source revision/version metadata. In ToolsAPI the bundle is mounted at `public/status-client`, while the canonical application route remains `/status`; do not collapse those two paths back together.
+- The runtime `pathSlugPrefix` is independent of the Vite asset base. ToolsAPI uses `pathSlugPrefix: /status` for tenant selection while production assets/config are loaded below `/status-client/`.
 - Production-branch history must remain linear so downstream pinned deployment commits stay reachable. Do not force-replace deployment history.
 
 ## Security and rendering
@@ -47,6 +48,7 @@ The application must be independently installable and hostable anywhere static w
 - All material changes require relevant automated tests.
 - Component behavior, API parsing/error handling, status rendering, configuration behavior and pathname slug selection should have regression tests where practical.
 - Pull requests must run install, tests, type checking, production build and static bundle-contract validation.
+- The production bundle contract must verify that generated asset URLs use `/status-client/`, while `status-config.json` keeps `pathSlugPrefix` at `/status` for ToolsAPI tenant routes.
 - A successful push to `main` may publish the already-verified bundle to `production` only after the test job passes. Publishing failures are release/deployment failures and must not be hidden.
 
 ## Documentation and releases

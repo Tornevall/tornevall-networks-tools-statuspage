@@ -31,13 +31,14 @@ jobs:
         run: npm run typecheck
 
       - name: Build Tools production bundle
-        run: VITE_BASE_PATH=/status/ npm run build
+        run: VITE_BASE_PATH=/status-client/ npm run build
 
       - name: Verify production bundle contract
         run: |
           test -r dist/index.html
           test -r dist/status-config.json
-          grep -Fq '/status/assets/' dist/index.html
+          grep -Fq '/status-client/assets/' dist/index.html
+          ! grep -Fq '/status/assets/' dist/index.html
           ! grep -Fq '/src/main.tsx' dist/index.html
           grep -Fq '"pathSlugPrefix": "/status"' dist/status-config.json
 
@@ -73,8 +74,10 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           test -r /tmp/statuspage-dist/index.html
           test -r /tmp/statuspage-dist/status-config.json
-          grep -Fq '/status/assets/' /tmp/statuspage-dist/index.html
+          grep -Fq '/status-client/assets/' /tmp/statuspage-dist/index.html
+          ! grep -Fq '/status/assets/' /tmp/statuspage-dist/index.html
           ! grep -Fq '/src/main.tsx' /tmp/statuspage-dist/index.html
+          grep -Fq '"pathSlugPrefix": "/status"' /tmp/statuspage-dist/status-config.json
 
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
