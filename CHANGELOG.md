@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-09-08
+
+- Decouple the Tools production asset base from the canonical `/status` application route by building the CI-managed bundle for `/status-client/` while keeping pathname tenant selection on `/status`.
+- Prevent nginx/front-controller deployments from treating a physical `public/status` directory as the public application route before Laravel can serve the SPA shell.
+- Keep the generated production bundle source-free, linearly published and suitable for pinning at ToolsAPI `public/status-client` without Node/npm on the production host.
+- Strengthen CI bundle checks so Tools production artifacts require `/status-client/assets/`, reject `/status/assets/`, and preserve `pathSlugPrefix: /status`.
+
 ## 0.1.2 - 2026-09-07
 
 - Add a CI-managed `production` branch containing only the verified static bundle built from `main` with the canonical `/status/` asset base.
