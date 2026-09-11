@@ -5,6 +5,7 @@
 - Separate page/canvas colors from card/surface colors so status content no longer inherits light-on-dark text when displayed on light status cards.
 - Keep the dark-mode outer canvas while using high-contrast light cards with dark headings, component text, metadata and status colors.
 - Add a focused theme regression test to preserve the dark-canvas/light-surface contrast contract.
+- Repair the theme regression test path resolution so CI can complete the verified 0.1.4 production build and publish the corrected bundle.
 
 ## 0.1.3 - 2026-09-08
 
