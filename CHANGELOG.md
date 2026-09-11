@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4 - 2026-09-11
+
+- Separate page/canvas colors from card/surface colors so status content no longer inherits light-on-dark text when displayed on light status cards.
+- Keep the dark-mode outer canvas while using high-contrast light cards with dark headings, component text, metadata and status colors.
+- Add a focused theme regression test to preserve the dark-canvas/light-surface contrast contract.
+
 ## 0.1.3 - 2026-09-08
 
 - Decouple the Tools production asset base from the canonical `/status` application route by building the CI-managed bundle for `/status-client/` while keeping pathname tenant selection on `/status`.
