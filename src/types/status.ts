@@ -33,6 +33,12 @@ export interface UptimeSummary {
   last30Days: number | null;
 }
 
+export interface DailyStatusHistoryEntry {
+  date: string;
+  status: ComponentStatus;
+  availability: number | null;
+}
+
 export interface StatusComponent {
   id: string;
   key: string;
@@ -41,6 +47,7 @@ export interface StatusComponent {
   status: ComponentStatus;
   statusLabel: string;
   uptime: UptimeSummary;
+  history: DailyStatusHistoryEntry[];
 }
 
 export interface IncidentUpdate {
