@@ -3,6 +3,7 @@ import { fetchStatusPage, StatusApiError } from './api/statusClient';
 import { loadRuntimeConfig, type RuntimeConfig } from './config';
 import type {
   ComponentStatus,
+  DailyStatusHistoryEntry,
   IncidentSeverity,
   StatusIncident,
   StatusPayload,
@@ -33,8 +34,26 @@ function formatDate(value: string): string {
   }).format(date);
 }
 
+function formatHistoryDate(value: string): string {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+  }).format(date);
+}
+
 function formatUptime(value: number | null): string {
   return value === null ? 'No data' : `${value.toFixed(value === 100 ? 0 : 2)}%`;
+}
+
+function historyLabel(entry: DailyStatusHistoryEntry): string {
+  const availability = entry.availability === null
+    ? ''
+    : `, ${formatUptime(entry.availability)} available`;
+  return `${formatHistoryDate(entry.date)}: ${entry.status.replace(/_/g, ' ')}${availability}`;
 }
 
 function safeHttpUrl(value: string | null): string | null {
@@ -249,20 +268,43 @@ export default function App() {
           {status.components.length === 0 && <p className="empty-state">No public services have been added yet.</p>}
           {status.components.map((component) => (
             <article className="service-row" key={component.id || component.key}>
-              <div className="service-main">
-                <span className={`mini-status status-${component.status}`} aria-hidden="true">
-                  {STATUS_ICONS[component.status]}
-                </span>
-                <div>
-                  <h3>{component.name}</h3>
-                  {component.description && <p>{component.description}</p>}
+              <div className="service-summary">
+                <div className="service-main">
+                  <span className={`mini-status status-${component.status}`} aria-hidden="true">
+                    {STATUS_ICONS[component.status]}
+                  </span>
+                  <div>
+                    <h3>{component.name}</h3>
+                    {component.description && <p>{component.description}</p>}
+                  </div>
+                </div>
+                <div className="service-metrics">
+                  <span className={`service-state status-text-${component.status}`}>{component.statusLabel}</span>
+                  <span title="Availability during the last 24 hours">24h {formatUptime(component.uptime.last24Hours)}</span>
+                  <span title="Availability during the last 30 days">30d {formatUptime(component.uptime.last30Days)}</span>
                 </div>
               </div>
-              <div className="service-metrics">
-                <span className={`service-state status-text-${component.status}`}>{component.statusLabel}</span>
-                <span title="Uptime during the last 24 hours">24h {formatUptime(component.uptime.last24Hours)}</span>
-                <span title="Uptime during the last 30 days">30d {formatUptime(component.uptime.last30Days)}</span>
-              </div>
+              {component.history.length > 0 ? (
+                <div className="service-history-wrap">
+                  <div className="history-period" aria-hidden="true">
+                    <span>90 days ago</span>
+                    <span>Today</span>
+                  </div>
+                  <div className="service-history" aria-label={`${component.name} daily status history`}>
+                    {component.history.map((entry) => (
+                      <span
+                        className={`history-day history-day-${entry.status}`}
+                        key={entry.date}
+                        title={historyLabel(entry)}
+                        aria-label={historyLabel(entry)}
+                        role="img"
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="history-unavailable">Daily history unavailable.</div>
+              )}
             </article>
           ))}
         </div>
