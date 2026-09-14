@@ -1,6 +1,7 @@
 import type { RuntimeConfig } from '../config';
 import type {
   ComponentStatus,
+  DailyStatusHistoryEntry,
   IncidentComponentRef,
   IncidentSeverity,
   IncidentStatus,
@@ -91,10 +92,28 @@ function humanize(value: string): string {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function parseHistoryEntry(value: unknown): DailyStatusHistoryEntry | null {
+  const raw = asRecord(value);
+  const date = asString(raw.date).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return null;
+  }
+
+  return {
+    date,
+    status: normalizeEnum(raw.status, COMPONENT_STATUSES, 'unknown'),
+    availability: percentage(raw.availability),
+  };
+}
+
 function parseComponent(value: unknown): StatusComponent {
   const raw = asRecord(value);
   const uptime = asRecord(raw.uptime);
   const status = normalizeEnum(raw.status, COMPONENT_STATUSES, 'unknown');
+  const history = asArray(raw.history)
+    .map(parseHistoryEntry)
+    .filter((entry): entry is DailyStatusHistoryEntry => entry !== null)
+    .slice(-90);
 
   return {
     id: String(raw.id ?? raw.key ?? ''),
@@ -107,6 +126,7 @@ function parseComponent(value: unknown): StatusComponent {
       last24Hours: percentage(uptime.last_24_hours),
       last30Days: percentage(uptime.last_30_days),
     },
+    history,
   };
 }
 
