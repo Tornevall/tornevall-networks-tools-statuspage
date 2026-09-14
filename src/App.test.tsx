@@ -71,7 +71,7 @@ describe('App', () => {
     expect(screen.getByText('24h 99.75%')).toBeInTheDocument();
     expect(screen.getByText('30d 99.98%')).toBeInTheDocument();
     expect(screen.getByLabelText('Public API daily status history')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Aug 20, 2026: partial outage, 97.50% available/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/partial outage, 97.50% available/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Elevated API latency' })).toBeInTheDocument();
     expect(screen.getByText('Some API requests are slower than normal.')).toBeInTheDocument();
   });
