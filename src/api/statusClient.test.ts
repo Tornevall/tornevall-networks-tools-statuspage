@@ -22,6 +22,15 @@ const payload = {
       description: null,
       status: 'operational',
       sort_order: 0,
+      uptime: {
+        last_24_hours: 99.75,
+        last_30_days: 99.98,
+      },
+      history: [
+        { date: '2026-08-19', status: 'operational', availability: 100 },
+        { date: '2026-08-20', status: 'partial_outage', availability: 97.5 },
+        { date: '2026-08-21', status: 'operational', availability: 100 },
+      ],
     },
   ],
   incidents: [
@@ -53,27 +62,58 @@ describe('statusClient', () => {
     );
   });
 
-  it('normalizes the ToolsAPI public status payload', () => {
+  it('normalizes the ToolsAPI public status payload and daily history', () => {
     const normalized = normalizeStatusPayload(payload);
 
     expect(normalized.page.name).toBe('Example Company');
     expect(normalized.overall.status).toBe('operational');
     expect(normalized.components[0].status).toBe('operational');
-    expect(normalized.components[0].uptime.last30Days).toBeNull();
+    expect(normalized.components[0].uptime.last24Hours).toBe(99.75);
+    expect(normalized.components[0].uptime.last30Days).toBe(99.98);
+    expect(normalized.components[0].history).toEqual([
+      { date: '2026-08-19', status: 'operational', availability: 100 },
+      { date: '2026-08-20', status: 'partial_outage', availability: 97.5 },
+      { date: '2026-08-21', status: 'operational', availability: 100 },
+    ]);
     expect(normalized.activeIncidents[0].severity).toBe('major');
     expect(normalized.activeIncidents[0].publicSummary).toBe('Some requests are slower than normal.');
     expect(normalized.activeIncidents[0].updates[0].createdAt).toBe('2026-08-21T20:45:00+02:00');
   });
 
-  it('degrades unknown future status values safely', () => {
+  it('keeps older backends compatible when history and uptime are missing', () => {
+    const component = { ...payload.components[0] } as Record<string, unknown>;
+    delete component.history;
+    delete component.uptime;
+
+    const normalized = normalizeStatusPayload({
+      ...payload,
+      components: [component],
+    });
+
+    expect(normalized.components[0].history).toEqual([]);
+    expect(normalized.components[0].uptime.last24Hours).toBeNull();
+    expect(normalized.components[0].uptime.last30Days).toBeNull();
+  });
+
+  it('drops malformed history entries and degrades unknown future status values safely', () => {
     const normalized = normalizeStatusPayload({
       ...payload,
       status: 'future_state',
-      components: [{ ...payload.components[0], status: 'future_state' }],
+      components: [{
+        ...payload.components[0],
+        status: 'future_state',
+        history: [
+          { date: 'not-a-date', status: 'operational', availability: 100 },
+          { date: '2026-08-21', status: 'future_state', availability: 150 },
+        ],
+      }],
     });
 
     expect(normalized.overall.status).toBe('unknown');
     expect(normalized.components[0].status).toBe('unknown');
+    expect(normalized.components[0].history).toEqual([
+      { date: '2026-08-21', status: 'unknown', availability: 100 },
+    ]);
   });
 
   it('fetches and normalizes the public payload', async () => {
