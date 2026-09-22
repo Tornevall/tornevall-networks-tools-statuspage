@@ -15,6 +15,15 @@ const statusPayload = {
       description: 'Requests and integrations',
       status: 'degraded',
       sort_order: 0,
+      uptime: {
+        last_24_hours: 99.75,
+        last_30_days: 99.98,
+      },
+      history: [
+        { date: '2026-08-19', status: 'operational', availability: 100 },
+        { date: '2026-08-20', status: 'partial_outage', availability: 97.5 },
+        { date: '2026-08-21', status: 'operational', availability: 100 },
+      ],
     },
   ],
   incidents: [
@@ -37,7 +46,7 @@ afterEach(() => {
 });
 
 describe('App', () => {
-  it('renders live page, component and incident state from the public API', async () => {
+  it('renders live page, component, uptime history and incident state from the public API', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
 
@@ -59,6 +68,10 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Example Company' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Degraded', level: 2 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Public API' })).toBeInTheDocument();
+    expect(screen.getByText('24h 99.75%')).toBeInTheDocument();
+    expect(screen.getByText('30d 99.98%')).toBeInTheDocument();
+    expect(screen.getByLabelText('Public API daily status history')).toBeInTheDocument();
+    expect(screen.getByLabelText(/partial outage, 97.50% available/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Elevated API latency' })).toBeInTheDocument();
     expect(screen.getByText('Some API requests are slower than normal.')).toBeInTheDocument();
   });

@@ -69,11 +69,15 @@ No private API token belongs in either configuration path. The frontend uses pub
 The client accepts the ToolsAPI public Statuspage payload with these public fields:
 
 - `slug`, `name`, `description`, `status`, and `published_at` for page identity/state;
-- `components[]` with component identity, description, status, and ordering;
+- `components[]` with component identity, description, status, ordering, optional `uptime` summaries, and optional `history` entries;
 - `incidents[]` with title, status, impact, public summary, timestamps, and published updates;
 - `events[]` when supplied by the backend.
 
-The normalizer also tolerates optional richer presentation metadata such as status labels, branding, homepage links, and uptime summaries. Missing optional fields degrade to neutral display values instead of breaking rendering. Unknown future status values render as `Unknown`.
+When `components[].history` is present, the client renders up to the latest 90 daily entries in the order supplied by the backend. Each entry may contain `date`, `status`, and `availability`. The meter uses status colors for quick scanning and exposes a text label for every day with its date, status and availability so color is not the only status signal.
+
+`components[].uptime.last_24_hours` and `components[].uptime.last_30_days` are displayed as availability percentages when supplied. Older backends that omit uptime or history remain compatible: those values render as unavailable without inventing status history in the browser.
+
+The normalizer also tolerates optional richer presentation metadata such as status labels, branding and homepage links. Missing optional fields degrade to neutral display values instead of breaking rendering. Unknown future status values render as `Unknown`.
 
 Remote text is rendered as text, not raw HTML.
 

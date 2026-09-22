@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5 - 2026-09-14
+
+- Add a compact 90-day daily status-history meter for each public component, with per-day operational, degraded, outage, maintenance and unknown states.
+- Show backend-provided 24-hour and 30-day availability next to each component while keeping older backends compatible when history is not supplied.
+- Add accessible per-day labels and date/availability details so history does not rely on color alone.
+- Add regression coverage for history normalization, malformed history input, legacy payload fallback and rendered history output.
+
 ## 0.1.4 - 2026-09-11
 
 - Separate page/canvas colors from card/surface colors so status content no longer inherits light-on-dark text when displayed on light status cards.
