@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 - 2026-09-26
+
+- Tone down degraded and outage-heavy pages by keeping overall, service and incident surfaces neutral while retaining status colors on compact icons, labels, history cells and accent borders.
+- Namespace current-status modifier classes so generic status CSS from a hosting page cannot accidentally recolor the Statuspage client.
+- Present service components as subtle neutral cards for easier scanning when several components are degraded at once.
+- Add regression coverage for neutral surfaces, scoped status classes and the overall degraded-state class contract.
+
 ## 0.1.5 - 2026-09-14
 
 - Add a compact 90-day daily status-history meter for each public component, with per-day operational, degraded, outage, maintenance and unknown states.
