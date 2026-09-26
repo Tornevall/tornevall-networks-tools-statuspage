@@ -187,7 +187,7 @@ export default function App() {
   if (!status) {
     return (
       <main className="status-shell unavailable-shell">
-        <div className="status-symbol status-major_outage">X</div>
+        <div className="status-symbol statuspage-status-major_outage">X</div>
         <h1>Status unavailable</h1>
         <p>{error || 'No public status page has been configured.'}</p>
         <p className="muted">The status application is running, but live status data is unavailable.</p>
@@ -230,8 +230,8 @@ export default function App() {
         </section>
       )}
 
-      <section className={`overall-card status-${status.overall.status}`} aria-label="Overall status">
-        <div className={`status-symbol status-${status.overall.status}`} aria-hidden="true">
+      <section className={`overall-card overall-status-${status.overall.status}`} aria-label="Overall status">
+        <div className={`status-symbol statuspage-status-${status.overall.status}`} aria-hidden="true">
           {STATUS_ICONS[status.overall.status]}
         </div>
         <div>
@@ -270,7 +270,7 @@ export default function App() {
             <article className="service-row" key={component.id || component.key}>
               <div className="service-summary">
                 <div className="service-main">
-                  <span className={`mini-status status-${component.status}`} aria-hidden="true">
+                  <span className={`mini-status statuspage-status-${component.status}`} aria-hidden="true">
                     {STATUS_ICONS[component.status]}
                   </span>
                   <div>
@@ -279,7 +279,7 @@ export default function App() {
                   </div>
                 </div>
                 <div className="service-metrics">
-                  <span className={`service-state status-text-${component.status}`}>{component.statusLabel}</span>
+                  <span className={`service-state statuspage-status-text-${component.status}`}>{component.statusLabel}</span>
                   <span title="Availability during the last 24 hours">24h {formatUptime(component.uptime.last24Hours)}</span>
                   <span title="Availability during the last 30 days">30d {formatUptime(component.uptime.last30Days)}</span>
                 </div>

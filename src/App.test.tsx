@@ -67,6 +67,7 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: 'Example Company' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Degraded', level: 2 })).toBeInTheDocument();
+    expect(screen.getByLabelText('Overall status')).toHaveClass('overall-status-degraded');
     expect(screen.getByRole('heading', { name: 'Public API' })).toBeInTheDocument();
     expect(screen.getByText('24h 99.75%')).toBeInTheDocument();
     expect(screen.getByText('30d 99.98%')).toBeInTheDocument();

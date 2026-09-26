@@ -13,6 +13,15 @@ describe('statuspage color theme', () => {
     expect(styles).toContain('color: var(--surface-text);');
   });
 
+  it('keeps status colors on scoped indicators instead of whole surfaces', () => {
+    expect(styles).toContain('.overall-card.overall-status-degraded');
+    expect(styles).toContain('border-left-color: var(--warning);');
+    expect(styles).toContain('--service-row-bg: #f8fafc;');
+    expect(styles).toContain('background: var(--service-row-bg);');
+    expect(styles).toContain('.statuspage-status-degraded');
+    expect(styles).not.toContain('.status-degraded, .status-partial_outage');
+  });
+
   it('keeps dark mode cards light with readable surface text', () => {
     const darkTheme = styles.split('@media (prefers-color-scheme: dark)')[1] ?? '';
 
