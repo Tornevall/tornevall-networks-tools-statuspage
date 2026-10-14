@@ -13,6 +13,10 @@ describe('statuspage color theme', () => {
     expect(styles).toContain('color: var(--surface-text);');
   });
 
+  it('pins the public page title to the Statuspage page-text color', () => {
+    expect(styles).toContain('.page-header h1 { color: var(--page-text); }');
+  });
+
   it('keeps status colors on scoped indicators instead of whole surfaces', () => {
     expect(styles).toContain('.overall-card.overall-status-degraded');
     expect(styles).toContain('border-left-color: var(--warning);');
