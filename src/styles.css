@@ -42,6 +42,7 @@ a { color: var(--accent-color); }
 .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; font-weight: 800; color: var(--page-muted); }
 h1, h2, h3, p { margin-top: 0; }
 h1 { margin-bottom: 8px; font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -.04em; }
+.page-header h1 { color: var(--page-text); }
 h2 { margin-bottom: 8px; font-size: 1.45rem; letter-spacing: -.02em; }
 h3 { margin-bottom: 4px; font-size: 1rem; }
 .page-description { max-width: 720px; color: var(--page-muted); line-height: 1.65; margin: 8px 0; }
