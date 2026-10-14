@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7 - 2026-10-14
+
+- Bind the public page title explicitly to the Statuspage `--page-text` theme color so host-page heading rules cannot wash out the service name.
+- Preserve automatic light/dark theme behavior by using the existing page-text variable instead of a fixed color.
+- Add regression coverage for page-title color isolation.
+
 ## 0.1.6 - 2026-09-26
 
 - Tone down degraded and outage-heavy pages by keeping overall, service and incident surfaces neutral while retaining status colors on compact icons, labels, history cells and accent borders.
