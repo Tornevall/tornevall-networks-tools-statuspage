@@ -75,7 +75,7 @@ The client accepts the ToolsAPI public Statuspage payload with these public fiel
 
 When `components[].history` is present, the client renders up to the latest 90 daily entries in the order supplied by the backend. Each entry may contain `date`, `status`, and `availability`. The meter uses status colors for quick scanning and exposes a text label for every day with its date, status and availability so color is not the only status signal.
 
-Current-state presentation keeps page and component surfaces neutral. Status color is intentionally limited to compact indicators, labels, history cells and accent borders so degraded pages remain readable without turning large areas yellow or red. Status is still always accompanied by text or symbols.
+Current-state presentation keeps page and component surfaces neutral. Status color is intentionally limited to compact indicators, labels, history cells and accent borders so degraded pages remain readable without turning large areas yellow or red. Status is still always accompanied by text or symbols. The public page title is explicitly bound to the Statuspage page-text theme variable so heading rules from an embedding or hosting page cannot override its readable light/dark-mode color.
 
 `components[].uptime.last_24_hours` and `components[].uptime.last_30_days` are displayed as availability percentages when supplied. Older backends that omit uptime or history remain compatible: those values render as unavailable without inventing status history in the browser.
 
