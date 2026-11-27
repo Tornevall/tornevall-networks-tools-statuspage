@@ -83,6 +83,8 @@ The normalizer also tolerates optional richer presentation metadata such as stat
 
 Remote text is rendered as text, not raw HTML.
 
+If a live refresh fails, the previous snapshot is discarded rather than displayed as current. The client shows Status unavailable (unknown health), including on HTTP 503 or network failure, and continues polling until a new successful snapshot arrives. Manual and automatic refreshes are serialized. Host the client on separate infrastructure to keep this unavailable view reachable if the ToolsAPI host itself is offline.
+
 ## Production bundle branch
 
 Source development stays on `main`; generated `dist/` files are not committed back to source branches. After a successful push to `main`, Statuspage CI runs tests, type checking and a Tools production build, validates the resulting bundle and publishes only that static output to the linear `production` branch.
