@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchStatusPage, StatusApiError } from './api/statusClient';
 import { loadRuntimeConfig, type RuntimeConfig } from './config';
 import type {
@@ -115,8 +115,14 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
 
   const refresh = useCallback(async (runtimeConfig: RuntimeConfig, initial = false) => {
+    // Serialise polling and manual refresh so older responses cannot overwrite newer observations.
+    if (refreshInFlight.current) {
+      return;
+    }
+    refreshInFlight.current = true;
     if (!initial) {
       setRefreshing(true);
     }
@@ -129,8 +135,11 @@ export default function App() {
       const message = caught instanceof StatusApiError
         ? caught.message
         : 'The public status API could not be reached.';
+      // A stale successful snapshot is not evidence of current availability.
+      setStatus(null);
       setError(message);
     } finally {
+      refreshInFlight.current = false;
       setInitialLoading(false);
       setRefreshing(false);
     }
@@ -187,7 +196,7 @@ export default function App() {
   if (!status) {
     return (
       <main className="status-shell unavailable-shell">
-        <div className="status-symbol statuspage-status-major_outage">X</div>
+        <div className="status-symbol statuspage-status-unknown" aria-hidden="true">?</div>
         <h1>Status unavailable</h1>
         <p>{error || 'No public status page has been configured.'}</p>
         <p className="muted">The status application is running, but live status data is unavailable.</p>
@@ -223,12 +232,6 @@ export default function App() {
           </a>
         )}
       </header>
-
-      {error && (
-        <section className="stale-warning" role="status">
-          <strong>Live refresh failed.</strong> {error} Showing the most recent data received by this page.
-        </section>
-      )}
 
       <section className={`overall-card overall-status-${status.overall.status}`} aria-label="Overall status">
         <div className={`status-symbol statuspage-status-${status.overall.status}`} aria-hidden="true">

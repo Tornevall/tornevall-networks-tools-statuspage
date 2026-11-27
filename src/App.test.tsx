@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
@@ -43,6 +43,7 @@ const statusPayload = {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe('App', () => {
@@ -75,5 +76,42 @@ describe('App', () => {
     expect(screen.getByLabelText(/partial outage, 97.50% available/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Elevated API latency' })).toBeInTheDocument();
     expect(screen.getByText('Some API requests are slower than normal.')).toBeInTheDocument();
+  });
+
+  it('removes a previously green snapshot on a failed refresh and recovers on fresh data', async () => {
+    vi.useFakeTimers();
+    let requests = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes('status-config.json')) {
+        return new Response(JSON.stringify({
+          apiBaseUrl: 'https://api.example.test',
+          pageSlug: 'example-company',
+          refreshIntervalSeconds: 10,
+        }), { status: 200 });
+      }
+      requests += 1;
+      if (requests === 2) {
+        return new Response('', { status: 503 });
+      }
+      return new Response(JSON.stringify({
+        ...statusPayload,
+        status: 'operational',
+        components: [{ ...statusPayload.components[0], status: 'operational' }],
+        incidents: [],
+      }), { status: 200 });
+    }));
+
+    render(<App />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(screen.getByLabelText('Overall status')).toHaveClass('overall-status-operational');
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+    expect(screen.getByRole('heading', { name: 'Status unavailable' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Overall status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Live', { exact: true })).not.toBeInTheDocument();
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+    expect(screen.getByLabelText('Overall status')).toHaveClass('overall-status-operational');
+    expect(screen.queryByRole('heading', { name: 'Status unavailable' })).not.toBeInTheDocument();
   });
 });
