@@ -64,3 +64,5 @@ The application must be independently installable and hostable anywhere static w
 - Reuse existing issues, branches, and pull requests when appropriate; do not create duplicates.
 - Development work should use an issue, branch, tests, and pull request.
 - Preserve backwards compatibility unless a breaking change is explicitly intended and documented.
+
+- A failed live refresh must invalidate any prior snapshot presented as current. Show unknown/unavailable status (not a confirmed service outage), keep retrying and restore current status only from a new successful fetch. Serialize manual and periodic requests; never let stale data appear as Live.
