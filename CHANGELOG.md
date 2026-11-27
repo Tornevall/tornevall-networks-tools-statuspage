@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8 - 2026-11-27
+
+- Discard stale status after a failed live refresh instead of continuing to show green current status or a Live label.
+- Show unknown/unavailable status and resume normal presentation only after a new successful fetch; serialize refreshes.
+- Add a deterministic green-to-unavailable-to-recovered rendering regression.
+
 ## 0.1.7 - 2026-10-14
 
 - Bind the public page title explicitly to the Statuspage `--page-text` theme color so host-page heading rules cannot wash out the service name.
